@@ -398,9 +398,9 @@ We also log-transform the variable in the same way as with rainfall
 **Log-transformation and new distribution**
 
 ```{r, message=FALSE}
-bike$log_snow <- log(bike$snowfall + 1)
+bike$log_snowfall <- log(bike$snowfall + 1)
 
-ggplot(bike, mapping = aes(x = bike$log_snow)) + 
+ggplot(bike, mapping = aes(x = bike$log_snowfall)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 

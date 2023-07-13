@@ -65,10 +65,10 @@ ggplot(bike, mapping = aes(x = bike$log_rainfall)) +
 
 ### Log-transformation Snowfall ###
 
-bike$log_snow <- log(bike$snowfall + 1)
+bike$log_snowfall <- log(bike$snowfall + 1)
 
 # New distribution
-ggplot(bike, mapping = aes(x = bike$log_snow)) + 
+ggplot(bike, mapping = aes(x = bike$log_snowfall)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 

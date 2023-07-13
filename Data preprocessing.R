@@ -41,60 +41,12 @@ bike$seasons <- as.factor(bike$seasons)
 # Checking for missing values
 sum(is.na(bike))
 
+# Checking for infinite values
+apply(bike, 2, function(x) any(is.infinite(x)))
+
 # Checking for duplicates
 sum(duplicated(bike))
 
 # Remove non-functioning days
-bike <- bike[bike$functioning_day != "No", ]
+bike <- bike[bike$functioning_day != "No",]
 
-## Checking for implausible values
-
-# Count
-max(bike$count) 
-min(bike$count)
-hist(bike$count)
-
-# Temperature
-max(bike$temperature) 
-min(bike$temperature)
-hist(bike$temperature)
-
-# Humidity
-max(bike$humidity) 
-min(bike$humidity)
-
-# Wind speed
-max(bike$wind_speed) 
-min(bike$wind_speed)
-hist(bike$wind_speed)
-
-# Visibility
-max(bike$visibility) 
-min(bike$visibility)
-hist(bike$visibility)
-
-# Dew point temperature
-max(bike$dew_point_temperature) 
-min(bike$dew_point_temperature)
-hist(bike$dew_point_temperature)
-
-# Solar radiation
-max(bike$solar_radiation) 
-min(bike$solar_radiation)
-hist(bike$solar_radiation)
-
-# Rainfall
-max(bike$rainfall) 
-min(bike$rainfall)
-hist(bike$rainfall)
-
-# Snowfall
-max(bike$snowfall) 
-min(bike$snowfall)
-hist(bike$snowfall)
-
-# Seasons
-levels(bike$seasons)
-
-# Holiday
-levels(bike$holiday)

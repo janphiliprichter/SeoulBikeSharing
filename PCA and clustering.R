@@ -1,6 +1,7 @@
 library(ggplot2)
 library(factoextra)
 library(scales)
+set.seed(42)
 
 ### PCA and Clustering ###
 
@@ -54,51 +55,76 @@ bike$pc2 <- pca$x[,"PC2"]
 # Graph of variables
 vars <- 
   fviz_pca_var(pca,
-             legend.title = "Contribution",
+             legend.title = "Contribution (%)",
              col.var = "contrib",
              gradient.cols = viridis_pal()(30),
              repel = TRUE) + 
-  labs(x = paste("PC1 ", round(var_exp[1], 2), "%", sep = ""),
-       y = paste("PC2 ", round(var_exp[2], 2), "%", sep = ""),
+  labs(x = paste("PC1 (", round(var_exp[1], 2), "%)", sep = ""),
+       y = paste("PC2 (", round(var_exp[2], 2), "%)", sep = ""),
        title = "PCA Variables") +
   theme(plot.title = element_text(hjust = 0.5))
 
 vars
 
-
-
-
-pcs <- bike[,c("pc1", "pc2")]
-
-fviz_nbclust(pcs, kmeans, 
+# Elbow plot for k-means
+fviz_nbclust(bike[,c("pc1", "pc2")], kmeans, 
              method = "wss",
-             barfill = "#00AFBB",
-             k.max = 8)
+             linecolor = "#00868f") + 
+  labs(x = "Number of Clusters",
+       y = "Total Within Sum of Squares",
+       title = "Optimal number of clusters for K-Means") +
+  geom_vline(xintercept = 3, linetype = 2) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
 
-km <- kmeans(X, centers = 3, nstart = 25)
+# k-means algorithm
+km <- kmeans(x = bike[,c("pc1", "pc2")], 
+             centers = 3, 
+             nstart = 1000)
 
-fviz_cluster(km, data = X)
+# Adding cluster variable to the dataset
+bike$cluster <- as.factor(km$cluster)
+
+# Scatterplot of the clusters
+ggplot(data = bike, 
+       mapping = aes(x = pc1,
+                     y = pc2,
+                     color = cluster)) +
+  geom_point(size = 0.8, alpha = 0.8) +
+  scale_colour_manual(values = c("#440154FF", "#21908CFF", "#d1af06")) +
+  theme_minimal() +
+  labs(x = paste("PC1 (", round(var_exp[1], 2), "%)", sep = ""),
+       y = paste("PC2 (", round(var_exp[2], 2), "%)", sep = ""),
+       title = "3-Means-Clustering") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Relevelling clusters for histogram 
+bike$cluster <- relevel(bike$cluster, ref = 3)
+#bike$cluster <- relevel(bike$cluster, ref = 1)
+#bike$cluster <- relevel(bike$cluster, ref = 2)
+levels(bike$cluster)
 
 
 
-
-
-head(X)
-
-X_scaled <- scale(X)
-head(X_scaled)
-
-km1 <- kmeans(X, centers = 3, nstart = 25)
-fviz_cluster(km1, data = X, geom = "point", pointsize = 0.5, ellipse = FALSE)
-
-km2 <- kmeans(X_scaled, centers = 3, nstart = 25)
-fviz_cluster(km2, data = X_scaled, geom = "point", pointsize = 0.5, ellipse = FALSE)
-
-km3 <- kmeans(pcs, centers = 3, nstart = 25)
-fviz_cluster(km3, data = pcs, geom = "point", pointsize = 0.5, ellipse = FALSE) 
-
-pcs2 <- bike[c("pc1", "pc2", "pc3")]
-km4 <- kmeans(pcs2, centers = 3, nstart = 25)
-fviz_cluster(km4, data = pcs2, geom = "point", pointsize = 0.5) 
+# Histogram for the different clusters
+ggplot(data = bike,
+       mapping = aes(x = count, 
+                     fill = cluster,
+                     colour = cluster)) +
+  geom_histogram(mapping = aes(y = after_stat(density)),
+                 position="identity",
+                 bins = 20,
+                 alpha = 0.5) +
+  geom_density(alpha = 0,
+               linewidth = 0.8) +
+  scale_fill_manual(values = c("#440154FF", "#21908CFF", "#d1af06")) +
+  scale_colour_manual(values = c("#440154FF", "#21908CFF", "#d1af06")) +
+  theme_minimal() +
+  labs(x = "Number of rented Bikes",
+       y = "Density",
+       title = "Histogram and KDE for each Cluster") +
+  theme(plot.title = element_text(hjust = 0.5))
+  
 
 

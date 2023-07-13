@@ -5,8 +5,9 @@ library(scales)
 ### PCA and Clustering ###
 
 # Setting the variables used for the PCS
-X <- bike[c("hour", "temperature", "humidity", "wind_speed", "visibility",
-            "dew_point_temperature", "solar_radiation", "rainfall", "snowfall")]
+X <- bike[c("temperature", "dew_point_temperature", "humidity", 
+            "sin_hour", "cos_hour", "sin_dow", "cos_dow", "log_rainfall",
+            "log_snowfall", "log_wind_speed", "sqrt_visibility")]
 
 # Performing the PCA on the data matrix
 pca <- prcomp(X, center = TRUE, scale. = TRUE)
@@ -46,11 +47,9 @@ scree <-
 
 scree
 
-## PCA Plot
-pc1 <- pca$x[,"PC1"]
-pc2 <- pca$x[,"PC2"]
-
-plot(pc1, pc2, pch = 16, cex = 0.2)
+## Save the first 2 PC's for further analysis
+bike$pc1 <- pca$x[,"PC1"]
+bike$pc2 <- pca$x[,"PC2"]
 
 # Graph of variables
 vars <- 
@@ -59,12 +58,47 @@ vars <-
              col.var = "contrib",
              gradient.cols = viridis_pal()(30),
              repel = TRUE) + 
-  labs(x = "PC1",
-       y = "PC2",
+  labs(x = paste("PC1 ", round(var_exp[1], 2), "%", sep = ""),
+       y = paste("PC2 ", round(var_exp[2], 2), "%", sep = ""),
        title = "PCA Variables") +
   theme(plot.title = element_text(hjust = 0.5))
 
 vars
 
+
+
+
+pcs <- bike[,c("pc1", "pc2")]
+
+fviz_nbclust(pcs, kmeans, 
+             method = "wss",
+             barfill = "#00AFBB",
+             k.max = 8)
+
+km <- kmeans(X, centers = 3, nstart = 25)
+
+fviz_cluster(km, data = X)
+
+
+
+
+
+head(X)
+
+X_scaled <- scale(X)
+head(X_scaled)
+
+km1 <- kmeans(X, centers = 3, nstart = 25)
+fviz_cluster(km1, data = X, geom = "point", pointsize = 0.5, ellipse = FALSE)
+
+km2 <- kmeans(X_scaled, centers = 3, nstart = 25)
+fviz_cluster(km2, data = X_scaled, geom = "point", pointsize = 0.5, ellipse = FALSE)
+
+km3 <- kmeans(pcs, centers = 3, nstart = 25)
+fviz_cluster(km3, data = pcs, geom = "point", pointsize = 0.5, ellipse = FALSE) 
+
+pcs2 <- bike[c("pc1", "pc2", "pc3")]
+km4 <- kmeans(pcs2, centers = 3, nstart = 25)
+fviz_cluster(km4, data = pcs2, geom = "point", pointsize = 0.5) 
 
 

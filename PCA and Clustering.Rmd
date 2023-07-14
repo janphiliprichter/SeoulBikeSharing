@@ -1,33 +1,55 @@
+---
+title: "PCA and Clustering"
+author: "Jan Philip Richter"
+date: "2023-07-14"
+output: html_document
+---
+
+Loading environment and packages
+```{r, message=FALSE}
+load(file = "/Users/philip/Documents/Milano University/2. Semester/Statistical Learning/Statistical Learning Project/SeoulBikeSharing/glb_env.RData")
 library(ggplot2)
 library(factoextra)
 library(scales)
 set.seed(42)
+```
 
-### Principal Component Analysis ###
+## Principal Component Analysis
 
-# Setting the variables used for the PCS
+Creating a data matrix with all numerical variables for the Principal Component analysis.
+```{r}
 X <- bike[c("temperature", "dew_point_temperature", "humidity", 
             "sin_hour", "cos_hour", "sin_dow", "cos_dow", "log_rainfall",
             "log_snowfall", "log_wind_speed", "sqrt_visibility")]
 
-# Singular value decomposition
+```
+
+We calculate the principal components using singular vector decomposition.
+This has the advantage of higher numerical accuracy compared to Eigendecomposition of the covariance matrix.
+
+```{r}
 svd <- prcomp(X, 
               center = TRUE, 
               scale = TRUE)
+```
 
-# SVD Summary
+Summary of the principal components.
+```{r}
 summary(svd)
+```
 
 
-## Variance Analysis
-
+Creating a vector containing the percentage of variance explained by each principle component.
+```{r}
 # Variance of the principal components
 pc_var <- svd$sdev ** 2
 
 # Percentage of variance explained by the principal components
 var_exp <- pc_var / sum(pc_var) * 100
+```
 
-# PC Scree Plot 
+Scree Plot of the Variance Explained by the Principal Components
+```{r}
 ggplot(data.frame(var_exp)) + 
   geom_bar(mapping = aes(x = 1:length(var_exp),
                          y = var_exp),
@@ -46,13 +68,16 @@ ggplot(data.frame(var_exp)) +
        y = "Variance Explained (%)",
        title = "PCA Variance Explained") +
   theme(plot.title = element_text(hjust = 0.5)) 
+```
 
-
-## Save the first 2 PC's for further analysis
+Saving the first 2 Principal Components for further analysis
+```{r}
 bike$pc1 <- svd$x[,"PC1"]
 bike$pc2 <- svd$x[,"PC2"]
+```
 
-# Contribution of each variable
+Contribution of the variables for the first 2 Principal Components
+```{r}
 fviz_pca_var(svd,
              legend.title = "Contribution (%)",
              col.var = "contrib",
@@ -62,12 +87,14 @@ fviz_pca_var(svd,
        y = paste("PC2 (", round(var_exp[2], 2), "%)", sep = ""),
        title = "PCA Variables") +
   theme(plot.title = element_text(hjust = 0.5))
+```
 
 
+## Clustering Analysis
 
-### Clustering Analysis ###
+Elbow plot to determine the optimal number of clusters to use for the k-means algorithm
 
-# Elbow plot for k-means
+```{r}
 fviz_nbclust(bike[,c("pc1", "pc2")], kmeans, 
              method = "wss",
              linecolor = "#00868f") + 
@@ -77,23 +104,27 @@ fviz_nbclust(bike[,c("pc1", "pc2")], kmeans,
   geom_vline(xintercept = 3, linetype = 2) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
+```
 
-# k-means algorithm
+Executing the k-means algorithm with the optimal number of clusters (3) determined previously
+
+```{r}
 km <- kmeans(x = bike[,c("pc1", "pc2")], 
              centers = 3, 
              nstart = 1000)
+```
 
+Adding and relevelling the assigned cluster for every observation to the data set and for further analysis
 
-# Adding cluster variable to the data set
+```{r}
 bike$cluster <- as.factor(km$cluster)
-
-# Relevelling to plot the histograms in the desired order
 levels(bike$cluster) <- c("C2", "C3", "C1")
 bike$cluster <- relevel(bike$cluster, ref = 3)
 levels(bike$cluster)
+```
 
-
-# Scatter-plot of the clusters
+Scatter-plot of the clusters assigned by k-means clustering
+```{r}
 ggplot(data = bike, 
        mapping = aes(x = pc1,
                      y = pc2,
@@ -107,9 +138,11 @@ ggplot(data = bike,
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(legend.title = element_blank()) +
   guides(color = guide_legend(override.aes = list(size = 4)))
+```
 
+Histogram and Kernel Density Estimation for the number of rented bikes for each of the three clusters
 
-# Histogram for the different clusters
+```{r}
 ggplot(data = bike,
        mapping = aes(x = count, 
                      fill = cluster,
@@ -130,7 +163,5 @@ ggplot(data = bike,
        title = "Histogram and KDE for each Cluster") +
   theme(plot.title = element_text(hjust = 0.5)) + 
   theme(legend.title = element_blank())
-
-
-
+```
 

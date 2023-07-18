@@ -5,13 +5,13 @@ set.seed(42)
 
 ### Principal Component Analysis ###
 
-# Setting the variables used for the PCS
-X <- bike[c("temperature", "dew_point_temperature", "humidity", 
+# Using only the numeric variables used for the PCS
+bike_num <- bike[,c("temperature", "dp_temperature", "humidity", 
             "sin_hour", "cos_hour", "sin_dow", "cos_dow", "log_rainfall",
             "log_snowfall", "log_wind_speed", "sqrt_visibility")]
 
 # Singular value decomposition
-svd <- prcomp(X, 
+svd <- prcomp(bike_num, 
               center = TRUE, 
               scale = TRUE)
 

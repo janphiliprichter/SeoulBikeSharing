@@ -1,4 +1,5 @@
 library(ggplot2)
+library(ggcorrplot)
 
 ### Count ###
 
@@ -53,7 +54,7 @@ ggplot(bike, mapping = aes(x = bike$temperature)) +
 summary(bike$dew_point_temperature)
 
 # Histogram and Kernel Density Estimation
-ggplot(bike, mapping = aes(x = bike$dew_point_temperature)) + 
+ggplot(bike, mapping = aes(x = bike$dp_temperature)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
@@ -204,4 +205,17 @@ levels(bike$holiday)
 # Unique values
 levels(bike$holiday)
 
+
+
+### Correlation ###
+
+corr <- cor(bike[, c("count", "hour", "temperature", "humidity", "wind_speed", 
+                     "visibility", "dp_temperature", "solar_radiation", "rainfall",
+                     "snowfall")])
+
+ggcorrplot(corr, outline.col = "white", 
+           type = "lower",
+           colors = c("#fcd303",  "#21908CFF", "#440154FF")) +
+  labs(title = "Correlation Matrix") +
+  theme(plot.title = element_text(hjust = 0.5))
 

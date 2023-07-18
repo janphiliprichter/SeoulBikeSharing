@@ -210,8 +210,8 @@ levels(bike$holiday)
 ### Correlation ###
 
 corr <- cor(bike[, c("count", "hour", "temperature", "humidity", "wind_speed", 
-                     "visibility", "dp_temperature", "solar_radiation", "rainfall",
-                     "snowfall")])
+                     "visibility", "dp_temperature", "solar_radiation", 
+                     "rainfall", "snowfall")])
 
 ggcorrplot(corr, outline.col = "white", 
            type = "lower",

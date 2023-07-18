@@ -132,5 +132,3 @@ ggplot(data = bike,
   theme(legend.title = element_blank())
 
 
-
-

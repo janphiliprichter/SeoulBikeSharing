@@ -1,7 +1,10 @@
 library(tidyverse)
 
 # Loading the data set
-bike <- read.csv("/Users/philip/Documents/Milano University/2. Semester/Statistical Learning/Statistical Learning Project/SeoulBikeSharing/SeoulBikeData.csv",
+bike <- read.csv(paste0("/Users/philip/Documents/Milano University/",
+                        "2. Semester/Statistical Learning/",
+                        "Statistical Learning Project/",
+                        "SeoulBikeSharing/SeoulBikeData.csv"),
                  check.names = FALSE)
 
 # Removing troublesome characters
@@ -19,7 +22,7 @@ bike <- bike %>%
          "humidity" = "Humidity(%)",
          "wind_speed" = "Wind speed (m/s)",
          "visibility" = "Visibility (10m)",
-         "dew_point_temperature" = "Dew point temperature(\xb0C)",
+         "dp_temperature" = "Dew point temperature(\xb0C)",
          "solar_radiation" = "Solar Radiation (MJ/m2)",
          "rainfall" = "Rainfall(mm)",
          "snowfall" = "Snowfall (cm)",

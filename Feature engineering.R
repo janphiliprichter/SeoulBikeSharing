@@ -1,4 +1,5 @@
 library(ggplot2)
+set.seed(42)
 
 ### Log-transformation Count ###
 
@@ -11,7 +12,8 @@ ggplot(bike, mapping = aes(x = bike$log_count)) +
                  color = "#00868f", 
                  alpha = 0.8, 
                  bins = 25) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0") +
   theme_minimal() + 
   labs(x = "Number of Rented Bikes",
        y = "Density",
@@ -136,5 +138,31 @@ bike$winter <- ifelse(bike$seasons == "Winter", 1, 0)
 bike$spring <- ifelse(bike$seasons == "Spring", 1, 0)
 bike$summer <- ifelse(bike$seasons == "Summer", 1, 0)
 bike$autumn <- ifelse(bike$seasons == "Autumn", 1, 0)
+
+
+
+### Train-Test-Split
+
+sample <- sample(c(TRUE, FALSE), 
+                 nrow(bike), 
+                 replace=TRUE, 
+                 prob=c(0.7,0.3))
+train  <- bike[sample, ]
+test   <- bike[!sample, ]
+
+
+### Matrices for Regulisation Methods
+X_train <- scale(as.matrix(train[,c("temperature", "dp_temperature", "humidity", 
+                                    "log_wind_speed", "solar_radiation", 
+                                    "sin_hour", "cos_hour", "sin_dow", 
+                                    "cos_dow", "log_rainfall", "log_snowfall", 
+                                    "sqrt_visibility")]))
+
+X_test <- scale(as.matrix(test[,c("temperature", "dp_temperature", "humidity", 
+                                  "log_wind_speed", "solar_radiation", 
+                                  "sin_hour", "cos_hour", "sin_dow", "cos_dow", 
+                                  "log_rainfall", "log_snowfall", 
+                                  "sqrt_visibility")]))
+
 
 

@@ -140,29 +140,3 @@ bike$summer <- ifelse(bike$seasons == "Summer", 1, 0)
 bike$autumn <- ifelse(bike$seasons == "Autumn", 1, 0)
 
 
-
-### Train-Test-Split
-
-sample <- sample(c(TRUE, FALSE), 
-                 nrow(bike), 
-                 replace=TRUE, 
-                 prob=c(0.7,0.3))
-train  <- bike[sample, ]
-test   <- bike[!sample, ]
-
-
-### Matrices for Regulisation Methods
-X_train <- scale(as.matrix(train[,c("temperature", "dp_temperature", "humidity", 
-                                    "log_wind_speed", "solar_radiation", 
-                                    "sin_hour", "cos_hour", "sin_dow", 
-                                    "cos_dow", "log_rainfall", "log_snowfall", 
-                                    "sqrt_visibility")]))
-
-X_test <- scale(as.matrix(test[,c("temperature", "dp_temperature", "humidity", 
-                                  "log_wind_speed", "solar_radiation", 
-                                  "sin_hour", "cos_hour", "sin_dow", "cos_dow", 
-                                  "log_rainfall", "log_snowfall", 
-                                  "sqrt_visibility")]))
-
-
-

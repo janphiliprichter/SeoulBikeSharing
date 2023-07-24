@@ -1,5 +1,12 @@
+# Loading libraries
 library(ggplot2)
+
+# Setting random seed
 set.seed(42)
+
+
+##### Feature Engineering #####
+
 
 ### Log-transformation Count ###
 
@@ -13,13 +20,26 @@ ggplot(bike, mapping = aes(x = bike$log_count)) +
                  alpha = 0.8, 
                  bins = 25) +
   geom_density(kernel = "gaussian", 
-               bw = "nrd0") +
+               bw = "nrd0", 
+               color = "#01393d") +
   theme_minimal() + 
   labs(x = "Number of Rented Bikes",
        y = "Density",
-       title = "Histogramm and KDE for Count") +
+       title = "Histogramm and KDE for log(Count)") +
   theme(plot.title = element_text(hjust = 0.5)) 
 
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = log_count)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for log(Count)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# New Skewness 
+skewness(bike$log_count)
 
 
 ### Sine-Cosine-Encoding of Hour ###
@@ -31,7 +51,8 @@ bike$cos_hour = cos(2 * pi * bike$hour / 24)
 plot(bike$sin_hour, bike$cos_hour, 
      xlab = "sine value", 
      ylab = "cosine value", 
-     pch = 16)
+     pch = 16,
+     main = "Cyclical Encoding for Hour")
 
 
 
@@ -55,13 +76,28 @@ ggplot(bike, mapping = aes(x = bike$log_rainfall)) +
                  color = "#00868f", 
                  alpha = 0.8,
                  bins = 20) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   scale_x_continuous(limits = c(-1, 5), oob = scales::oob_keep) + 
   theme_minimal() + 
   labs(x = "log(Rainfall)",
        y = "Density",
        title = "Histogram and KDE for log(Rainfall)") +
   theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = log_rainfall)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for log(Rainfall)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# New Skewness 
+skewness(bike$log_count)
 
 
 
@@ -76,7 +112,9 @@ ggplot(bike, mapping = aes(x = bike$log_snowfall)) +
                  color = "#00868f", 
                  alpha = 0.8,
                  bins = 20) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   scale_x_continuous(limits = c(-1, 5), oob = scales::oob_keep) + 
   theme_minimal() + 
   labs(x = "log(Snowfall)",
@@ -84,6 +122,18 @@ ggplot(bike, mapping = aes(x = bike$log_snowfall)) +
        title = "Histogram and KDE for log(Snowfall)") +
   theme(plot.title = element_text(hjust = 0.5)) 
 
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = log_snowfall)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for log(Snowfall)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# New Skewness 
+skewness(bike$log_snowfall)
 
 
 
@@ -92,19 +142,33 @@ ggplot(bike, mapping = aes(x = bike$log_snowfall)) +
 bike$log_wind_speed <- log(bike$wind_speed + 1)
 
 # New distribution
-ggplot(bike, mapping = aes(x = bike$log_wind_speed)) + 
+hist2 <- ggplot(bike, mapping = aes(x = log_wind_speed)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
                  alpha = 0.8,
-                 bins = 20) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+                 bins = 12) +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   theme_minimal() + 
-  labs(x = "log(Wind Speed)",
+  labs(x = "log(Wind Speed + 1)",
        y = "Density",
        title = "Histogram and KDE for log(Wind Speed)") +
   theme(plot.title = element_text(hjust = 0.5)) 
 
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = log_wind_speed)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for log(Wind Speed)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# New Skewness 
+skewness(bike$wind_speed)
 
 
 ### Square-root-transformation Visibility ###
@@ -118,12 +182,27 @@ ggplot(bike, mapping = aes(x = bike$sqrt_visibility)) +
                  color = "#00868f", 
                  alpha = 0.8,
                  bins = 20) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   theme_minimal() + 
   labs(x = "sqrt(Visibility)",
        y = "Density",
        title = "Histogram and KDE for sqrt(Visibility)") +
   theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = sqrt_visibility)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for sqrt(Visibility)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# New Skewness 
+skewness(bike$sqrt_visibility)
 
 
 

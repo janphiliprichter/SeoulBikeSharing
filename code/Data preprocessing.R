@@ -1,4 +1,8 @@
+# Loading libraries
 library(tidyverse)
+
+
+##### Data Preprocessing #####
 
 # Loading the data set
 bike <- read.csv(paste0("/Users/philip/Documents/Milano University/",
@@ -51,5 +55,7 @@ apply(bike, 2, function(x) any(is.infinite(x)))
 sum(duplicated(bike))
 
 # Remove non-functioning days
+length(bike$functioning_day[bike$functioning_day == "No"])
 bike <- bike[bike$functioning_day != "No",]
+
 

@@ -1,7 +1,14 @@
+# Loading libraries
 library(leaps)
 library(car)
 library(glmnet)
 library(MASS)
+
+# Setting random seed
+set.seed(42)
+
+
+##### Parametric Regression #####
 
 
 ### Train-Test-Split
@@ -31,6 +38,7 @@ X_test <- scale(as.matrix(test[,c("temperature", "dp_temperature", "humidity",
 
 ### Linear Regression ###
 
+
 ## Linear Regression using the first 2 Principal Components
 
 # Training the model
@@ -51,7 +59,6 @@ summary(mod_pc)$adj.r.squared
 
 
 
-
 ## Linear Regression using all variables
 
 # Training the model
@@ -67,9 +74,6 @@ summary(mod_all)
 # VIF
 vif(mod_all)
 
-# Outlier visualisations
-plot(mod_all, pch = 16, cex = 0.5)
-
 # BIC of the model
 BIC(mod_all)
 
@@ -79,19 +83,6 @@ summary(mod_all)$r.squared
 # Adjusted R2
 summary(mod_all)$adj.r.squared
 
-
-
-### Robust linear regression
-
-mod_robust <- rlm(log_count ~ temperature + dp_temperature + 
-                    humidity + log_wind_speed + solar_radiation + sin_hour + 
-                    cos_hour + sin_dow + cos_dow + log_rainfall + log_snowfall + 
-                    sqrt_visibility + spring + summer + winter + holiday, 
-                  data = train, 
-                  psi = psi.hampel, 
-                  init = "lts")
-
-BIC(mod_robust)
 
 
 
@@ -108,8 +99,8 @@ mod_best <- regsubsets(log_count ~ temperature + dp_temperature +
 # Plotting with BIC
 plot(mod_best, 
      scale = "bic",
-     main = "Best Subset Selection",
-     ylab = "BIC")
+     ylab = "BIC",
+     main = "Best Subset Selection with BIC")
 
 # Best models
 data.frame(
@@ -131,6 +122,18 @@ mod_sub <- lm(log_count ~ dp_temperature +
 # Summary of the model
 summary(mod_sub)
 
+# VIF
+vif(mod_sub)
+
+# BIC
+BIC(mod_sub)
+
+# R2
+summary(mod_sub)$r.squared
+
+# Adjusted R2
+summary(mod_sub)$adj.r.squared
+
 
 
 ### Regulisation methods
@@ -147,28 +150,39 @@ ridge <- glmnet(X_train,
 
 plot(ridge, 
      xvar = "lambda",
-     label = TRUE,
+     label = 5,
+     lwd = 2,
      main = "Ridge Regression Coefficients")
 
-# Cross validation for lambda
+
+# Cross validation for shrinkage penalty
 cv_ridge <- cv.glmnet(X_train, 
                       train$log_count, 
                       alpha = 0)
-plot(cv_ridge) 
+plot(cv_ridge,
+     main = "CV - Shrinkage Penalty Ridge Regression") 
 
-#find optimal lambda value that minimizes test MSE
-lambda_ridge <- cv_ridge$lambda.min
+# Finding optimal lambda value that minimizes test MSE
+lambda_ridge <- cv_ridge$lambda.1se
 lambda_ridge
 
+# Fitting the model
 mod_ridge <- glmnet(X_train, 
                     train$log_count, 
                     alpha = 0, 
-                    lambda = lambda_ridge)
+                    lambda = lambda_ridge,
+                    standardize = FALSE,
+                    family = "gaussian",
+                    thres = 1E-12, 
+                    maxit = 10^7)
+
 coef(mod_ridge)
+
 
 
 ## Lasso regression
 
+# Visualisation of coefficients for multiple lambdas
 lambda_array <- 10 ** seq(0.1, -2, by = -0.1)
 
 lasso <- glmnet(X_train,
@@ -178,33 +192,30 @@ lasso <- glmnet(X_train,
 
 plot(lasso, 
      xvar = "lambda", 
-     label = TRUE,
-     main = "Lasso Regression Coefficients")
+     label = TRUE, 
+     lwd = 2,
+     main = "Coefficients Lasso Regression")
 
+# Cross validation for shrinkage penalty
 cv_lasso <- cv.glmnet(X_train, 
                       train$log_count, 
                       alpha = 1)
-plot(cv_lasso) 
+plot(cv_lasso,
+     main = "CV - Shrinkage Penalty Lasso Regression") 
 
 
-#find optimal lambda value that minimizes test MSE
-lambda_lasso <- cv_lasso$lambda.min
+# Finding the optimal lambda value that minimizes test MSE
+lambda_lasso <- cv_lasso$lambda.1se
 lambda_lasso
 
+# Fitting the model
 mod_lasso <- glmnet(X_train, 
                     train$log_count, 
                     alpha = 1, 
-                    lambda = lambda_lasso)
-coef(mod_lasso)
-
-
-### Comparison with lm with only numeric
-
-mod_num <- lm(train$log_count ~ X_train)
-
-mod_num$coefficients
-
-coef(mod_ridge)
+                    lambda = lambda_lasso,
+                    thres = 1E-12, 
+                    maxit = 10^7)
 
 coef(mod_lasso)
+
 

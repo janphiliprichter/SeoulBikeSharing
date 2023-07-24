@@ -1,7 +1,15 @@
+# Loading libraries
 library(ggplot2)
+library(GGally)
 library(factoextra)
 library(scales)
+
+# Setting random seed
 set.seed(42)
+
+
+##### PCA and Clustering #####
+
 
 ### Principal Component Analysis ###
 
@@ -60,7 +68,7 @@ fviz_pca_var(svd,
              repel = TRUE) + 
   labs(x = paste("PC1 (", round(var_exp[1], 2), "%)", sep = ""),
        y = paste("PC2 (", round(var_exp[2], 2), "%)", sep = ""),
-       title = "PCA Variables") +
+       title = "Correlation Circle") +
   theme(plot.title = element_text(hjust = 0.5))
 
 
@@ -73,7 +81,7 @@ fviz_nbclust(bike[,c("pc1", "pc2")], kmeans,
              linecolor = "#00868f") + 
   labs(x = "Number of Clusters",
        y = "Total Within Sum of Squares",
-       title = "Optimal number of clusters for K-Means") +
+       title = "Optimal Number of Clusters for K-Means") +
   geom_vline(xintercept = 3, linetype = 2) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
@@ -90,7 +98,6 @@ bike$cluster <- as.factor(km$cluster)
 # Relevelling to plot the histograms in the desired order
 levels(bike$cluster) <- c("C2", "C3", "C1")
 bike$cluster <- relevel(bike$cluster, ref = 3)
-levels(bike$cluster)
 
 
 # Scatter-plot of the clusters
@@ -132,3 +139,20 @@ ggplot(data = bike,
   theme(legend.title = element_blank())
 
 
+# Parallel Coordinates
+ggparcoord(data = bike,
+           columns = c(2,4,5,6,7),
+           alphaLines = 0.03,
+           groupColumn = "cluster") + 
+  theme_minimal() +
+  scale_colour_manual(values = c("#440154FF", "#21908CFF", "#d1af06")) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  labs(x = "",
+       y = "",
+       title = "Parallel Coordinates for each Cluster") +
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme(legend.title = element_blank()) +
+  ylim(-3, 4)
+
+
+  

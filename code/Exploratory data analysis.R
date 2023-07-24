@@ -1,7 +1,12 @@
+# Loading libraries
 library(ggplot2)
 library(ggcorrplot)
 library(patchwork)
 library(moments)
+
+
+##### Exploratory Data Analysis #####
+
 
 ### Count ###
 
@@ -18,12 +23,25 @@ ggplot(bike, mapping = aes(x = bike$count)) +
                  color = "#00868f", 
                  alpha = 0.8, 
                  bins = 25) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   theme_minimal() + 
   labs(x = "Number of Rented Bikes",
        y = "Density",
        title = "Histogram and KDE for Count") +
   theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = count)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for Count") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
 
 
 ### Hour ###
@@ -38,17 +56,32 @@ unique(bike$hour)
 # Summary statistics
 summary(bike$temperature)
 
+# Skewness
+skewness(bike$temperature)
+
 # Histogram and Kernel Density Estimation
 ggplot(bike, mapping = aes(x = bike$temperature)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
                  alpha = 0.8) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   theme_minimal() + 
   labs(x = "Temperature (C)",
        y = "Density",
        title = "Histogram and KDE for Temperature") +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = temperature)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for Temperature") +
+  theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5)) 
 
 
@@ -56,19 +89,35 @@ ggplot(bike, mapping = aes(x = bike$temperature)) +
 ### Dew-point Temperature ###
 
 # Summary statistics
-summary(bike$dew_point_temperature)
+summary(bike$dp_temperature)
+
+# Skewness
+skewness(bike$dp_temperature)
 
 # Histogram and Kernel Density Estimation
 ggplot(bike, mapping = aes(x = bike$dp_temperature)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
-                 alpha = 0.8) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+                 alpha = 0.8,
+                 bins = 20) +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   theme_minimal() + 
   labs(x = "Dew-Point Temperature (C)",
        y = "Density",
        title = "Histogram and KDE for Dew-Point Temperature") +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = dp_temperature)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for Dew-Point Temperature") +
+  theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5)) 
 
 
@@ -86,12 +135,25 @@ ggplot(bike, mapping = aes(x = bike$humidity)) +
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
-                 alpha = 0.8) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+                 alpha = 0.8,
+                 bins = 25) +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   theme_minimal() + 
   labs(x = "Humidity (%)",
        y = "Density",
        title = "Histogram and KDE for Humidity") +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = humidity)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for Humidity") +
+  theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5)) 
 
 
@@ -108,12 +170,25 @@ ggplot(bike, mapping = aes(x = bike$rainfall)) +
                  color = "#00868f", 
                  alpha = 0.8,
                  bins = 20) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
-  scale_x_continuous(limits = c(-1, 5), oob = scales::oob_keep) + 
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
+  scale_x_continuous(limits = c(-1, 5), 
+                     oob = scales::oob_keep) + 
   theme_minimal() + 
   labs(x = "Rainfall (mm)",
        y = "Density",
        title = "Histogram and KDE for Rainfall") +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = rainfall)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for Rainfall") +
+  theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5)) 
 
 
@@ -130,12 +205,25 @@ ggplot(bike, mapping = aes(x = bike$snowfall)) +
                  color = "#00868f", 
                  alpha = 0.8,
                  bins = 20) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
-  scale_x_continuous(limits = c(-1, 5), oob = scales::oob_keep) + 
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
+  scale_x_continuous(limits = c(-1, 5), 
+                     oob = scales::oob_keep) + 
   theme_minimal() + 
   labs(x = "Snowfall (cm)",
        y = "Density",
        title = "Histogram and KDE for Snowfall") +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = snowfall)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for Snowfall") +
+  theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5)) 
 
 
@@ -148,35 +236,41 @@ summary(bike$wind_speed)
 # Skewness
 skewness(bike$wind_speed)
 
-
-par(mfrow = c(1, 2))
 # Histogram and Kernel Density Estimation
-hist <- ggplot(bike, mapping = aes(x = wind_speed)) + 
+ggplot(bike, mapping = aes(x = wind_speed)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
                  alpha = 0.8,
                  bins = 20) +
-  geom_density(kernel = "gaussian", bw = "nrd0", color = "#01393d") +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   theme_minimal() + 
   labs(x = "Wind Speed (m/s)",
-       y = "Density") +
+       y = "Density",
+       title = "Histogram and KDE for Wind Speed") +
   theme(plot.title = element_text(hjust = 0.5)) 
 
-
-qq <- ggplot(data = bike, mapping = aes(sample = wind_speed)) +
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = wind_speed)) +
   stat_qq() +
   stat_qq_line() +
-  labs(x = "Theoretical Quantiles", y = "Sample Quantiles") +
-  theme_minimal()
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for Wind Speed") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
 
-hist + qq
 
 
 ### Visibility ###
 
 # Summary statistics
 summary(bike$visibility)
+
+# Skewness
+skewness(bike$visibility)
 
 # Histogram and Kernel Density Estimation
 ggplot(bike, mapping = aes(x = bike$visibility)) + 
@@ -191,12 +285,25 @@ ggplot(bike, mapping = aes(x = bike$visibility)) +
        title = "Histogram and KDE for Visibility") +
   theme(plot.title = element_text(hjust = 0.5)) 
 
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = wind_speed)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for Visibility") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
 
 
 ### Solar Radiation ###
 
 # Summary statistics
 summary(bike$solar_radiation)
+
+# Skewness
+skewness(bike$solar_radiation)
 
 # Histogram and Kernel Density Estimation
 ggplot(bike, mapping = aes(x = bike$solar_radiation)) + 
@@ -211,6 +318,15 @@ ggplot(bike, mapping = aes(x = bike$solar_radiation)) +
        title = "Histogram and KDE for Solar Radiation") +
   theme(plot.title = element_text(hjust = 0.5)) 
 
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = wind_speed)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for Solar Radiation") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
 
 
 ### Holiday ###
@@ -236,7 +352,7 @@ corr <- cor(bike[, c("count", "hour", "temperature", "humidity", "wind_speed",
 ggcorrplot(corr, outline.col = "white", 
            type = "lower",
            colors = c("#fcd303",  "#21908CFF", "#440154FF")) +
+  labs(title = "Correlation Heatmap") +
   theme(plot.title = element_text(hjust = 0.5))
 
 
-round(corr, 2)

@@ -1,10 +1,15 @@
 library(ggplot2)
 library(ggcorrplot)
+library(patchwork)
+library(moments)
 
 ### Count ###
 
 # Summary statistics
 summary(bike$count)
+
+# Skewness
+skewness(bike$count)
 
 # Histogram and Kernel Density Estimation
 ggplot(bike, mapping = aes(x = bike$count)) + 
@@ -73,6 +78,9 @@ ggplot(bike, mapping = aes(x = bike$dp_temperature)) +
 # Summary statistics
 summary(bike$humidity)
 
+# Skewness
+skewness(bike$humidity)
+
 # Histogram and Kernel Density Estimation
 ggplot(bike, mapping = aes(x = bike$humidity)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
@@ -137,20 +145,32 @@ ggplot(bike, mapping = aes(x = bike$snowfall)) +
 # Summary statistics
 summary(bike$wind_speed)
 
+# Skewness
+skewness(bike$wind_speed)
+
+
+par(mfrow = c(1, 2))
 # Histogram and Kernel Density Estimation
-ggplot(bike, mapping = aes(x = bike$wind_speed)) + 
+hist <- ggplot(bike, mapping = aes(x = wind_speed)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
                  alpha = 0.8,
                  bins = 20) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+  geom_density(kernel = "gaussian", bw = "nrd0", color = "#01393d") +
   theme_minimal() + 
   labs(x = "Wind Speed (m/s)",
-       y = "Density",
-       title = "Histogram and KDE for Wind Speed") +
+       y = "Density") +
   theme(plot.title = element_text(hjust = 0.5)) 
 
+
+qq <- ggplot(data = bike, mapping = aes(sample = wind_speed)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", y = "Sample Quantiles") +
+  theme_minimal()
+
+hist + qq
 
 
 ### Visibility ###
@@ -216,7 +236,7 @@ corr <- cor(bike[, c("count", "hour", "temperature", "humidity", "wind_speed",
 ggcorrplot(corr, outline.col = "white", 
            type = "lower",
            colors = c("#fcd303",  "#21908CFF", "#440154FF")) +
-  labs(title = "Correlation Matrix") +
   theme(plot.title = element_text(hjust = 0.5))
 
 
+round(corr, 2)

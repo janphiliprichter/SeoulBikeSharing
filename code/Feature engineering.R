@@ -142,7 +142,7 @@ skewness(bike$log_snowfall)
 bike$log_wind_speed <- log(bike$wind_speed + 1)
 
 # New distribution
-hist2 <- ggplot(bike, mapping = aes(x = log_wind_speed)) + 
+ggplot(bike, mapping = aes(x = log_wind_speed)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 

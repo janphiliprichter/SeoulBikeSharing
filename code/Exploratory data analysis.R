@@ -163,6 +163,9 @@ ggplot(data = bike, mapping = aes(sample = humidity)) +
 # Summary statistics
 summary(bike$rainfall)
 
+# Skewness
+skewness(bike$rainfall)
+
 # Histogram and Kernel Density Estimation
 ggplot(bike, mapping = aes(x = bike$rainfall)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
@@ -197,6 +200,9 @@ ggplot(data = bike, mapping = aes(sample = rainfall)) +
 
 # Summary statistics
 summary(bike$snowfall)
+
+# Skewness
+skewness(bike$snowfall)
 
 # Histogram and Kernel Density Estimation
 ggplot(bike, mapping = aes(x = bike$snowfall)) + 

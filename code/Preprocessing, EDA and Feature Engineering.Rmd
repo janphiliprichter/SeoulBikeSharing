@@ -2,13 +2,16 @@
 title: "Preprocessing, EDA and Feature Engineering"
 author: "Jan Philip Richter"
 date: "2023-07-12"
-output: html_document
+output: pdf_document
 ---
 
 Loading the required packages
 
 ```{r, message=FALSE}
 library(tidyverse)
+library(ggcorrplot)
+library(patchwork)
+library(moments)
 ```
 
 ## Data set
@@ -41,7 +44,10 @@ The variables contained in the data set are:
 
 #### Loading the dataset
 ```{r}
-bike <- read.csv("/Users/philip/Documents/Milano University/2. Semester/Statistical Learning/Statistical Learning Project/SeoulBikeSharing/SeoulBikeData.csv",
+bike <- read.csv(paste0("/Users/philip/Documents/Milano University/",
+                        "2. Semester/Statistical Learning/",
+                        "Statistical Learning Project/",
+                        "SeoulBikeSharing/SeoulBikeData.csv"),
                  check.names = FALSE)
 ```
 
@@ -62,7 +68,7 @@ bike <- bike %>%
          "humidity" = "Humidity(%)",
          "wind_speed" = "Wind speed (m/s)",
          "visibility" = "Visibility (10m)",
-         "dew_point_temperature" = "Dew point temperature(\xb0C)",
+         "dp_temperature" = "Dew point temperature(\xb0C)",
          "solar_radiation" = "Solar Radiation (MJ/m2)",
          "rainfall" = "Rainfall(mm)",
          "snowfall" = "Snowfall (cm)",
@@ -70,6 +76,7 @@ bike <- bike %>%
          "holiday" = "Holiday",
          "functioning_day" = "Functioning Day"
          )
+
 ```
 
 #### Data Classes 
@@ -108,7 +115,7 @@ There are no missing values or duplicates in the data set.
 
 The goal if this analysis is to predict the number of bikes rented at a given hour.
 The column **functioning_day** indicates if the service was available at a given day or not.
-If the service is not available the number of rented bikes is obviously 0 and if the service is available the is no information about the number of rented bikes to be gathered solely from that fact.
+If the service is not available the number of rented bikes is obviously 0 and if the service is available there is no information about the number of rented bikes to be gathered solely from that fact.
 The column is therefore removed, so our problem trivially changes to now predict the amount of bikes rented, given that the bike sharing service is available.
 
 ```{r}
@@ -138,13 +145,16 @@ For this we use a histogram and a kernel density estimation.
 For the KDE we use a gaussian kernel and Silverman's rule of thumb for the bandwidth.
 
 ```{r}
+# Histogram and Kernel Density Estimation
 ggplot(bike, mapping = aes(x = bike$count)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
                  alpha = 0.8, 
                  bins = 25) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   theme_minimal() + 
   labs(x = "Number of Rented Bikes",
        y = "Density",
@@ -152,26 +162,59 @@ ggplot(bike, mapping = aes(x = bike$count)) +
   theme(plot.title = element_text(hjust = 0.5)) 
 ```
 
-We can see that the distribution appears to right-skewed.
-It seems appropriate to use a log-transformation to obtain a distribution which is closer to a normal distribution, to improve the results for the regression analysis later on.
+**Skewness of Count**
+```{r}
+skewness(bike$count)
+```
+
+```{r}
+ggplot(data = bike, mapping = aes(sample = count)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for Count") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+```
+
+We can see that the distribution appears to right-skewed and has an estimated moment coefficient of skewness of 1.14.
+The QQ-Plot also shows, that the distribution is far away from a normal distribution, so it seems appropriate to use a log-transformation to obtain a distribution which is closer to a normal distribution, to improve the results for the regression analysis later on.
+
 
 **Log-transformation and new distribution**
 
 ```{r}
 bike$log_count <- log(bike$count)
 
+# New distribution
 ggplot(bike, mapping = aes(x = bike$log_count)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
                  alpha = 0.8, 
                  bins = 25) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   theme_minimal() + 
   labs(x = "Number of Rented Bikes",
        y = "Density",
-       title = "Histogramm and KDE for Count") +
+       title = "Histogramm and KDE for log(Count)") +
   theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = log_count)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for log(Count)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# New Skewness 
+skewness(bike$log_count)
 ```
 
 After the log-transformation the data is still skewed, albeit now left-skewed, and not normally distributed but the skewness, as well as the variance, have been significantly reduced, which will lead to better predictability in the regression analysis.
@@ -237,20 +280,28 @@ The weather in Seoul can be fairly extreme compared to central european levels. 
 **Distribution of Temperature**
 
 ```{r, message=FALSE}
+# Histogram and Kernel Density Estimation
 ggplot(bike, mapping = aes(x = bike$temperature)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
                  alpha = 0.8) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   theme_minimal() + 
   labs(x = "Temperature (C)",
        y = "Density",
        title = "Histogram and KDE for Temperature") +
   theme(plot.title = element_text(hjust = 0.5)) 
+
+# Skewness
+skewness(bike$temperature)
 ```
 
-The data looks somewhat normally distributed, so no transformation is necessary.
+The data looks somewhat normally distributed and has a fairly low skewness, so no transformation is necessary.
+
+
 
 ### Dew-point Temperature
 
@@ -262,23 +313,32 @@ summary(bike$dew_point_temperature)
 
 Again there are no implausible values to be found in the range of dew-point temperature.
 
-**Distribution of Temperature**
+**Distribution of Dew-Point Temperature**
 
 ```{r, message=FALSE}
-ggplot(bike, mapping = aes(x = bike$dew_point_temperature)) + 
+# Histogram and Kernel Density Estimation
+ggplot(bike, mapping = aes(x = bike$dp_temperature)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
-                 alpha = 0.8) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+                 alpha = 0.8,
+                 bins = 20) +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   theme_minimal() + 
   labs(x = "Dew-Point Temperature (C)",
        y = "Density",
        title = "Histogram and KDE for Dew-Point Temperature") +
   theme(plot.title = element_text(hjust = 0.5)) 
+
+# Skewness
+skewness(bike$dp_temperature)
 ```
 
 The distribution seems to have a slight skew but it cannot reasonably be improved with a transformation, so the data stays as it is.
+
+
 
 ### Humidity
 
@@ -294,18 +354,28 @@ The range of values for humidity is very plausible, going from 0% up to 98%.
 **Distribution of Humidity**
 
 ```{r, message=FALSE}
+# Histogram and Kernel Density Estimation
 ggplot(bike, mapping = aes(x = bike$humidity)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
-                 alpha = 0.8) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+                 alpha = 0.8,
+                 bins = 25) +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   theme_minimal() + 
   labs(x = "Humidity (%)",
        y = "Density",
        title = "Histogram and KDE for Humidity") +
   theme(plot.title = element_text(hjust = 0.5)) 
+
+# Skewness
+skewness(bike$humidity)
 ```
+
+The distribution for Humidity is not very skewed and is appropriate for usage in statistical modeling as it is and need no transformation.
+
 
 
 ### Rainfall
@@ -320,18 +390,35 @@ Both maximum and minimum of rainfall appear to be plausible, so there is no just
 **Distribution of Rainfall**
 
 ```{r, message=FALSE}
+# Skewness
+skewness(bike$rainfall)
+
+# Histogram and Kernel Density Estimation
 ggplot(bike, mapping = aes(x = bike$rainfall)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
                  alpha = 0.8,
                  bins = 20) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
-  scale_x_continuous(limits = c(-1, 5), oob = scales::oob_keep) + 
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
+  scale_x_continuous(limits = c(-1, 5), 
+                     oob = scales::oob_keep) + 
   theme_minimal() + 
   labs(x = "Rainfall (mm)",
        y = "Density",
        title = "Histogram and KDE for Rainfall") +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = rainfall)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for Rainfall") +
+  theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5)) 
 ```
 
@@ -344,24 +431,40 @@ To account for the fact, that there are many observations, where $\text{rainfall
 ```{r, message=FALSE}
 bike$log_rainfall <- log(bike$rainfall + 1)
 
+# New distribution
 ggplot(bike, mapping = aes(x = bike$log_rainfall)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
                  alpha = 0.8,
                  bins = 20) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   scale_x_continuous(limits = c(-1, 5), oob = scales::oob_keep) + 
   theme_minimal() + 
   labs(x = "log(Rainfall)",
        y = "Density",
        title = "Histogram and KDE for log(Rainfall)") +
   theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = log_rainfall)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for log(Rainfall)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# New Skewness 
+skewness(bike$log_rainfall)
 ```
 
 Even after the log transformation the data is heavily skewed, but at least the variance is now reduced.
 Different transformation techniques, like Box-Cox-Transformation, log-transformation with a higher base or inverse-transformation did not yield a better distribution.
-Using the regular log-transformation comes with the benefit of better interprability for the linear regression.
+Using the regular log-transformation comes with the benefit of better interpretability for the linear regression.
 
 
 ### Snowfall
@@ -377,18 +480,35 @@ Both maximum and minimum of snowfall appear to be plausible, so there is no just
 **Distribution of Snowfall**
 
 ```{r, message=FALSE}
+# Skewness
+skewness(bike$snowfall)
+
+# Histogram and Kernel Density Estimation
 ggplot(bike, mapping = aes(x = bike$snowfall)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
                  alpha = 0.8,
                  bins = 20) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
-  scale_x_continuous(limits = c(-1, 5), oob = scales::oob_keep) + 
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
+  scale_x_continuous(limits = c(-1, 5), 
+                     oob = scales::oob_keep) + 
   theme_minimal() + 
   labs(x = "Snowfall (cm)",
        y = "Density",
        title = "Histogram and KDE for Snowfall") +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = snowfall)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for Snowfall") +
+  theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5)) 
 ```
 
@@ -400,19 +520,35 @@ We also log-transform the variable in the same way as with rainfall
 ```{r, message=FALSE}
 bike$log_snowfall <- log(bike$snowfall + 1)
 
+# New distribution
 ggplot(bike, mapping = aes(x = bike$log_snowfall)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
                  alpha = 0.8,
                  bins = 20) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   scale_x_continuous(limits = c(-1, 5), oob = scales::oob_keep) + 
   theme_minimal() + 
   labs(x = "log(Snowfall)",
        y = "Density",
        title = "Histogram and KDE for log(Snowfall)") +
   theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = log_snowfall)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for log(Snowfall)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# New Skewness 
+skewness(bike$log_snowfall)
 ```
 
 Same as with the rainfall, also the snowfall stays very skewed after the log-transformation, albeit with reduced variance.
@@ -431,18 +567,34 @@ The range of values for wind speed is very plausible.
 **Distribution of Wind Speed**
 
 ```{r, message=FALSE}
-ggplot(bike, mapping = aes(x = bike$wind_speed)) + 
+# Histogram and Kernel Density Estimation
+ggplot(bike, mapping = aes(x = wind_speed)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
                  alpha = 0.8,
                  bins = 20) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   theme_minimal() + 
   labs(x = "Wind Speed (m/s)",
        y = "Density",
        title = "Histogram and KDE for Wind Speed") +
   theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = wind_speed)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for Wind Speed") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# Skewness
+skewness(bike$wind_speed)
 ```
 
 The distribution is slightly right-skewed and can be significantly improved with a log-transformation.
@@ -452,18 +604,34 @@ The distribution is slightly right-skewed and can be significantly improved with
 ```{r, message=FALSE}
 bike$log_wind_speed <- log(bike$wind_speed + 1)
 
-ggplot(bike, mapping = aes(x = bike$log_wind_speed)) + 
+# New distribution
+ggplot(bike, mapping = aes(x = log_wind_speed)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
                  alpha = 0.8,
-                 bins = 20) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+                 bins = 12) +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   theme_minimal() + 
-  labs(x = "log(Wind Speed)",
+  labs(x = "log(Wind Speed + 1)",
        y = "Density",
        title = "Histogram and KDE for log(Wind Speed)") +
   theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = log_wind_speed)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for log(Wind Speed)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# New Skewness 
+skewness(bike$log_wind_speed)
 ```
 
 The distribution after the log-transformation looks approximately normal which is very desirable.
@@ -482,6 +650,7 @@ The minimum value for visibility seems to be fairly low, but it could be due to 
 **Distribution of Visibility**
 
 ```{r, message=FALSE}
+# Histogram and Kernel Density Estimation
 ggplot(bike, mapping = aes(x = bike$visibility)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
@@ -493,6 +662,19 @@ ggplot(bike, mapping = aes(x = bike$visibility)) +
        y = "Density",
        title = "Histogram and KDE for Visibility") +
   theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = wind_speed)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for Visibility") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# Skewness
+skewness(bike$visibility)
 ```
 
 The data is extremely left-skewed. In this case it is reasonable to perform a square root-transformation.
@@ -501,18 +683,34 @@ The data is extremely left-skewed. In this case it is reasonable to perform a sq
 ```{r, message=FALSE}
 bike$sqrt_visibility <- sqrt(bike$visibility)
 
+# New distribution
 ggplot(bike, mapping = aes(x = bike$sqrt_visibility)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
                  color = "#00868f", 
                  alpha = 0.8,
                  bins = 20) +
-  geom_density(kernel = "gaussian", bw = "nrd0") +
+  geom_density(kernel = "gaussian", 
+               bw = "nrd0", 
+               color = "#01393d") +
   theme_minimal() + 
   labs(x = "sqrt(Visibility)",
        y = "Density",
        title = "Histogram and KDE for sqrt(Visibility)") +
   theme(plot.title = element_text(hjust = 0.5)) 
+
+# QQ-Plot
+ggplot(data = bike, mapping = aes(sample = sqrt_visibility)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(x = "Theoretical Quantiles", 
+       y = "Sample Quantiles",
+       title = "QQ-Plot for sqrt(Visibility)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+# New Skewness 
+skewness(bike$sqrt_visibility)
 ```
 
 The data is still very left-skewed, but has a lower variance now.
@@ -529,6 +727,7 @@ After some brief research it seems like the range of values for solar radiation 
 **Distribution of Solar Radiation**
 
 ```{r, message=FALSE}
+# Histogram and Kernel Density Estimation
 ggplot(bike, mapping = aes(x = bike$solar_radiation)) + 
   geom_histogram(mapping = aes(y = after_stat(density)), 
                  fill = "#00AFBB", 
@@ -540,6 +739,9 @@ ggplot(bike, mapping = aes(x = bike$solar_radiation)) +
        y = "Density",
        title = "Histogram and KDE for Solar Radiation") +
   theme(plot.title = element_text(hjust = 0.5)) 
+
+# Skewness
+skewness(bike$solar_radiation)
 ```
 
 Again we have an extremely skewed distribution but performing a log-transformation does almost not change the distribution at all, so we just keep this variable as it is.
@@ -578,3 +780,21 @@ bike$summer <- ifelse(bike$seasons == "Summer", 1, 0)
 bike$autumn <- ifelse(bike$seasons == "Autumn", 1, 0)
 ```
 
+## Correlation Analysis
+
+```{r}
+corr <- cor(bike[, c("count", "hour", "temperature", "humidity", "wind_speed", 
+                     "visibility", "dp_temperature", "solar_radiation", 
+                     "rainfall", "snowfall")])
+
+ggcorrplot(corr, outline.col = "white", 
+           type = "lower",
+           colors = c("#fcd303",  "#21908CFF", "#440154FF")) +
+  labs(title = "Correlation Heatmap") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+The temperature, hour of the day and the dew point temperature seem to have the strongest relationship with the number of bikes rented.
+With a correlation coefficient of 0.91 there also appears to be a strong connection between the temperature and the dew point temperature. The latter also shows a relatively strong correlation with humidity. In fact, the dew point temperature can be almost perfectly approximated using the so called Magnus formula.
+
+Based on this knowledge it would be reasonable to exclude dew point temperature at this point already from any further analysis but we intentionally keep it in the data set to observe the effects of this relationship on the models which will be introduced later on in the analysis.

@@ -28,4 +28,3 @@ plot(mod_gam)
 BIC(mod_gam)
 
 
-

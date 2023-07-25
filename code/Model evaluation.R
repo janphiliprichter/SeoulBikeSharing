@@ -12,12 +12,6 @@ mse_all <- MSE(pred_all, test$log_count)
 mae_all <- MAE(pred_all, test$log_count)
 
 
-# Robust model
-pred_robust <- predict(mod_robust, newdata = test)
-mse_robust <- MSE(pred_robust, test$log_count)
-mae_robust <- MAE(pred_robust, test$log_count)
-
-
 # Subset model
 pred_sub <- predict(mod_sub, newdata = test)
 mse_sub <- MSE(pred_sub, test$log_count)
@@ -44,16 +38,16 @@ mae_gam <- MAE(pred_gam, test$log_count)
 
 # MSEs
 
-evals <- data.frame(method = c("PC", "All Variables", "Robust", "Best Subset", 
+evals <- data.frame(method = c("PC", "All Variables", "Best Subset", 
                                "Ridge", "Lasso", "GAM", 
-                               "PC", "All Variables", "Robust", "Best Subset", 
+                               "PC", "All Variables", "Best Subset", 
                                "Ridge", "Lasso", "GAM"),
-                   eval = c(mse_pc, mse_all, mse_robust, mse_sub, 
+                   eval = c(mse_pc, mse_all, mse_sub, 
                                      mse_ridge, mse_lasso, mse_gam,
-                           mae_pc, mae_all, mae_robust, mae_sub, 
+                           mae_pc, mae_all, mae_sub, 
                            mae_ridge, mae_lasso, mae_gam),
-                   metric = c(rep("MSE", 7),
-                              rep("MAE", 7)))
+                   metric = c(rep("MSE", 6),
+                              rep("MAE", 6)))
 
 ggplot(data = evals,
        mapping = aes(x = factor(method, 
@@ -68,8 +62,7 @@ ggplot(data = evals,
   scale_fill_manual(values = c("#023740", "#0e9799")) +
   theme_minimal() +
   labs(x = "",
-       y = "",
-       title = "Model Prediction Evaluations")+
+       y = "") +
   theme(plot.title = element_text(hjust = 0.5)) + 
   guides(fill = guide_legend(title = "Metric")) + 
   theme(axis.text.x = element_text(angle = 315))

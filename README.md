@@ -1,2 +1,2 @@
 # SeoulBikeSharing
-Statistical Analysis for Bike Sharing Data in Seoul, KR
+Statistical Analysis of Bike Sharing Data in Seoul, KR
